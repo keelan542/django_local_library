@@ -29,6 +29,29 @@ class Genre(models.Model):
             ),
         ]
 
+class Language(models.Model):
+    """Model representing a Language"""
+    name = models.CharField(max_length=200,
+                            unique=True,
+                            help_text="Enter the book's natural language")
+
+    def get_absolute_url(self):
+        """Returns the url to access a particular language instance"""
+        return reverse('language-detail', args=[str(self.id)])
+
+    def __str__(self):
+        """String for representing the Model object"""
+        return self.name
+    
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                Lower('name'),
+                name='language_name_case_insensitive_unique',
+                violation_error_message="Language already exisits (case insensitive match)"
+            )
+        ]
+
 class Book(models.Model):
     """Model representing a book (not a specific copy of a book)"""
     title = models.CharField(max_length=200)
@@ -46,8 +69,10 @@ class Book(models.Model):
     
     genre = models.ManyToManyField(Genre, help_text="Select a genre for this book")
 
+    language = models.ForeignKey('Language', on_delete=models.SET_NULL, null=True)
+
     def __str__(self):
-        """String for representing the Modle object"""
+        """String for representing the Model object"""
         return self.title
     
     def get_absolute_url(self):
@@ -59,7 +84,7 @@ class BookInstance(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4,
                           help_text="Unique ID for this book across the whole library")
     
-    books = models.ForeignKey('Book', on_delete=models.RESTRICT, null=True)
+    book = models.ForeignKey('Book', on_delete=models.RESTRICT, null=True)
 
     imprint = models.CharField(max_length=200)
 
